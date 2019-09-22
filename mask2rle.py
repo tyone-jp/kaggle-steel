@@ -1,3 +1,5 @@
+import numpy as np
+
 def mask2rle(img):
     pixels= img.T.flatten()
     pixels = np.concatenate([[0], pixels, [0]])

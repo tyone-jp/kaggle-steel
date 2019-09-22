@@ -1,6 +1,13 @@
-def create_test_gen():
+import keras
+from keras.preprocessing.image import ImageDataGenerator
+import numpy as np
+import pandas as pd
+import cv2
+from mask2rle import build_masks
+
+def create_test_gen(test_df):
         return ImageDataGenerator(rescale=1/255.).flow_from_dataframe(
-            test_imgs,
+            test_df,
             directory='../input/test_images',
             x_col='ImageId',
             class_mode=None,

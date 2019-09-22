@@ -9,8 +9,8 @@ from keras import layers
 from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Model,load_model
 from keras.layers import Input
-from keras.layers.covolutional import Conv2D,Conv2DTranspose
-from keras.layrs.pooling import MaxPooling2D
+from keras.layers.convolutional import Conv2D,Conv2DTranspose
+from keras.layers.pooling import MaxPooling2D
 from keras.layers.merge import concatenate
 from keras.optimizers import Adam
 from keras.callbacks import Callback,ModelCheckpoint
@@ -25,9 +25,9 @@ from logging import StreamHandler,DEBUG,Formatter,FileHandler,getLogger
 from generator import create_test_gen,DataGenerator
 from mask2rle import build_rles,build_masks
 from model import build_model
-
+from loss_function import dice_coef
 logger=getLogger(__name__)
-DIR='../output/result/'
+DIR='../result/'
 
 def load_img(code,base,resize=True):
     path=f'{base}/{code}'
@@ -81,13 +81,13 @@ if __name__=='__main__':
     logger.info('non_missing_train_idx shape:{}'.format(non_missing_train_idx.shape))
     logger.info('remove test images without defects')
 
-    test_gen=create_test_gen()
+    test_gen=create_test_gen(test_df=test_imgs)
 
     remove_model=load_model('../output/model.h5')
     remove_model.summary()
 
     test_missing_pred=remove_model.predict_generator(
-        test_gen,steps=len(test_gen),vebose=1)
+        test_gen,steps=len(test_gen),verbose=1)
     test_imgs['allMissing']=test_missing_pred
 
     logger.info('test_imgs',test_imgs.head())
@@ -109,7 +109,7 @@ if __name__=='__main__':
     BATCH_SIZE=16
     train_idx,val_idx=train_test_split(non_missing_train_idx.index,random_state=2019,test_size=0.15)
 
-    train_generator=DataGenerator(train_idx,df=mask_count_df,target_de=train_df,batch_size=BATCH_SIZE,n_classes=4)
+    train_generator=DataGenerator(train_idx,df=mask_count_df,target_df=train_df,batch_size=BATCH_SIZE,n_classes=4)
 
     val_generator=DataGenerator(val_idx,df=mask_count_df,target_df=train_df,batch_size=BATCH_SIZE,n_classes=4)
 
@@ -118,7 +118,4 @@ if __name__=='__main__':
 
     checkpoint=ModelCheckpoint('../output/model-unet.h5',monitor='val_loss',verbose=0,save_best_only=True,save_weights_only=False,mode='auto')
 
-    history=model.fit_generator(train_generator,validation_data=val_generator,callbacks=[checkpoint],use_multiprocessing=False,workers=1,epochs=10)
-    
-    
-                                                  
+    history=model.fit_generator(train_generator,validation_data=val_generator,callbacks=[checkpoint],use_multiprocessing=False,workers=1,epochs=10)                                                  
