@@ -1,4 +1,6 @@
 import numpy as np
+from PIL import Image
+import pandas as pd
 
 def mask2rle(img):
     pixels= img.T.flatten()
@@ -37,4 +39,21 @@ def build_rles(masks):
     rles = [mask2rle(masks[:, :, i]) for i in range(depth)]
 
     return rles
+
+def rle2maskResize(rle):
+    if (pd.isnull(rle)) | (rle==''):
+        return np.zeros((128,800),dtype=np.uint8)
+
+    height=256
+    width=1600
+    mask=np.zeros(width*height,dtype=np.uint8)
+
+    array=np.asarray([int(x) for x in rle.split()])
+    starts=array[0::2]-1
+    lengths=array[1::2]
+    for index,start in enumerate(starts):
+        mask[int(start):int(start+lengths[index])]=1
+
+    return mask.reshape((height,width),order='F')[::2,::2]
+
 
